@@ -10,11 +10,12 @@ import json
 from math import sin, cos, acos, pi
 
 #A-Importer les données dans un dictionnaire donneesBus
-with open("donneesBus.json") as ficDonneesBus:
+with open("Fichiers/donneesBus.json") as ficDonneesBus:
     donneesBus = json.load(ficDonneesBus)
   
 #B-Creer une liste nom_arrets conteant tous les noms d'arrets
 nom_arrets = list(donneesBus.keys())
+print(nom_arrets)
 
 #C-Créer des fonctions:
 
@@ -44,11 +45,13 @@ def voisin(nom_som):
 dic_bus = {}
 for i in nom_arrets:
     dic_bus[i] = voisin(i)
+print(dic_bus)
 
 #Matrice d'adjacence
 mat_bus = [
     [1 if i in voisin(arret) else 0 for i in nom_arrets] for arret in nom_arrets
 ]
+print(mat_bus)
 
 #E-
  
@@ -75,8 +78,9 @@ def distArc(arret1, arret2):
         return distanceGPS(lattitude(arret1), lattitude(arret2), longitude(arret1), longitude(arret2))
     else:
         return float('inf')
-    
+
 #F-Matrice des poids
 poids_bus = [
     [distArc(arret1, arret2) for arret2 in nom_arrets] for arret1 in nom_arrets
     ]
+print(poids_bus)
