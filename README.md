@@ -1,6 +1,3 @@
-# S2-02 - Exploration algorithmique d'un problème
-
-
 L’objectif de cette SAE est de mettre en pratique les algorithmes de recherche de plus court chemin (Dijkstra, Bellmann Ford,  Floyd Warshall…) et de visualiser leur exécution pas à pas en utilisant une bibliothèque graphique.
 
 Les étapes
