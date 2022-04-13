@@ -168,21 +168,20 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
     # Pour le sommet de départ, on met la distance à 0.
     distances_precedents[arret_dep][0] = 0
 
-    # Fonction qui relache les sommets et renvoie un booléen.
-    # Ce booléen est mit à True si on a trouvé une distance plus courte, sinon il est mit à False.
     def relachement(sommet1: str, sommet2: str) -> bool:
         """
         Relachement d'un sommet.
         Cf. https://fr.wikipedia.org/wiki/Algorithme_de_Bellman
         :param sommet1: sommet 1
         :param sommet2: sommet 2
-        :return:
+        :return: Vrai si relachêment, sinon false.
         """
         if distances_precedents[sommet1][0] + distance_arc(sommet1, sommet2) < distances_precedents[sommet2][0]:
             distances_precedents[sommet2][0] = distances_precedents[sommet1][0] + distance_arc(sommet1, sommet2)
             distances_precedents[sommet2][1] = sommet1
             return True
         return False
+
 
     # De base on initialise la variable contenant le booléen du changement à False.
     changement = False
@@ -200,7 +199,6 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
 
 
     sommetArr = distances_precedents[arret_arriv][1]
-    print(f"{sommetArr=}")
     listeArrets = [sommetArr]
     while sommetArr != arret_dep:
         sommetArr = distances_precedents[sommetArr][1]
@@ -211,8 +209,8 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
     print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {distances_precedents[arret_arriv][0]} et il faut passer par les arrêts {listeArrets}.")
     
 
-    return listeArrets, distances_precedents[arret_arriv][0]
+    return listeArrets, round(distances_precedents[arret_arriv][0])
 
-arr2 = voisin(noms_arrets[64])[0]
-
-print(bellman(noms_arrets[1], arr2))
+# print(bellman(noms_arrets[1], voisin(noms_arrets[1])[0]))
+# print(distance_arrets(noms_arrets[1], voisin(noms_arrets[1])[0]))
+a = bellman(noms_arrets[1], voisin(noms_arrets[1])[0])
