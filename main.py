@@ -100,7 +100,7 @@ def distanceGPS(latA: float, latB: float, longA: float, longB: float) -> float:
     # angle en radians entre les 2 points
     S = acos(round(sin(ltA) * sin(ltB) + cos(ltA) * cos(ltB) * cos(abs(loB - loA)), 14))
     # distance entre les 2 points, comptée sur un arc de grand cercle
-    return S * RT
+    return round(S * RT)
 
 
 def distance_arrets(arret1: str, arret2: str) -> float:
@@ -143,7 +143,7 @@ def distance_arc(arret1: str, arret2: str) -> float:
 poids_bus = [
     [distance_arc(nom_som1, nom_som2) for nom_som2 in noms_arrets] for nom_som1 in noms_arrets
 ]
-
+#print(poids_bus)
 """
 Algortihme de Bellman
 Deux conditions d'arrêts :
@@ -213,4 +213,70 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
 
 # print(bellman(noms_arrets[1], voisin(noms_arrets[1])[0]))
 # print(distance_arrets(noms_arrets[1], voisin(noms_arrets[1])[0]))
-a = bellman(noms_arrets[1], voisin(noms_arrets[1])[0])
+#a = bellman(noms_arrets[1], voisin(noms_arrets[1])[0])
+
+
+def floydWarshall(arret_dep, arret_arriv):
+    matricePoids = deepcopy(mat_bus)
+    matricePred = deepcopy(mat_bus)
+    
+    """
+    Initialisation de M0 et P0    
+    """
+    for i, sommet in enumerate(noms_arrets):
+        for j, sommet2 in enumerate(noms_arrets):
+            if i == j:
+                matricePoids[i][j] = 0
+                matricePred[i][j] = "N"
+            else:
+                if poids_bus[i][j] == float("inf"):
+                    matricePoids[i][j] = float("inf")
+                    matricePred[i][j] = "N"
+                else:
+                    matricePoids[i][j] = poids_bus[i][j]
+                    matricePred[i][j] = i + 1
+    print("MATRICE POIDS DE BASE")
+    print(matricePoids)
+    print("======================")
+    print("MATRICE PRED DE BASE")
+    print(matricePred)
+    print("======================")
+    
+    """
+    Recuperation ligne et colonne
+    """
+    
+    for j in range(len(matricePoids)):    
+        colonne=[]
+        ligne=[]
+        for i in range(len(matricePoids)):
+            if matricePoids[j][i] != float("inf") and matricePoids[j][i] != 0:
+                ligne.append((j,i))
+            if matricePoids[i][j] != float("inf") and matricePoids[i][j] != 0:
+                colonne.append((i,j))
+
+        #Calcul si chemin mieux
+        for i in colonne:
+            for l in ligne:
+                if i[0] != l[1]:
+                    
+                    calcul = matricePoids[i[0]][i[1]] + matricePoids[l[0]][l[1]]
+                    
+                    if calcul < matricePoids[i[0]][l[1]]:
+                        matricePoids[i[0]][l[1]] = calcul
+                        
+                        #Change la matrice pred
+                        matricePred[i[0]][l[1]] = matricePred[j][l[1]]
+    
+    print("MATRICE POIDS DE FIN")
+    print(matricePoids)
+    print("======================")
+    print("MATRICE PRED DE FIN")
+    print(matricePred)
+    print("======================")
+        
+    
+    
+print(floydWarshall(noms_arrets[1], voisin(noms_arrets[1])[0]))
+                    
+    
