@@ -235,12 +235,15 @@ def floydWarshall(arret_dep, arret_arriv):
                 else:
                     matricePoids[i][j] = poids_bus[i][j]
                     matricePred[i][j] = i + 1
+    """
     print("MATRICE POIDS DE BASE")
     print(matricePoids)
     print("======================")
     print("MATRICE PRED DE BASE")
     print(matricePred)
     print("======================")
+    """
+    
     
     """
     Recuperation ligne et colonne
@@ -254,8 +257,10 @@ def floydWarshall(arret_dep, arret_arriv):
                 ligne.append((j,i))
             if matricePoids[i][j] != float("inf") and matricePoids[i][j] != 0:
                 colonne.append((i,j))
-
-        #Calcul si chemin mieux
+                
+        """
+        Calcul si chemin mieux
+        """
         for i in colonne:
             for l in ligne:
                 if i[0] != l[1]:
@@ -263,20 +268,30 @@ def floydWarshall(arret_dep, arret_arriv):
                     calcul = matricePoids[i[0]][i[1]] + matricePoids[l[0]][l[1]]
                     
                     if calcul < matricePoids[i[0]][l[1]]:
+                        #Change la matrice poids
                         matricePoids[i[0]][l[1]] = calcul
                         
                         #Change la matrice pred
                         matricePred[i[0]][l[1]] = matricePred[j][l[1]]
-    
+    """
     print("MATRICE POIDS DE FIN")
     print(matricePoids)
     print("======================")
     print("MATRICE PRED DE FIN")
     print(matricePred)
     print("======================")
-        
+    """
+
+   #Faire la remontée de la matrice
+    listeArrets = []
+    listeArrets.append(arret_arriv)
+    sommet = arret_arriv
+    while sommet != arret_dep:
+        sommet = matricePred[noms_arrets.index(sommet)][noms_arrets.index(arret_dep)]
+        listeArrets.append(sommet)
+    listeArrets = [arret_dep] + listeArrets
+    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {matricePoids[noms_arrets.index(arret_arriv)][noms_arrets.index(arret_dep)]} et il faut passer par les arrêts {listeArrets}.")
     
     
-print(floydWarshall(noms_arrets[1], voisin(noms_arrets[1])[0]))
-                    
     
+#print(floydWarshall(noms_arrets[1], voisin(noms_arrets[1])[0]))
