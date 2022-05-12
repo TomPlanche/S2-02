@@ -205,8 +205,8 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
         listeArrets.append(sommetArr)
 
     listeArrets = [arret_arriv] + listeArrets
-
-    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {distances_precedents[arret_arriv][0]} et il faut passer par les arrêts {listeArrets}.")
+    listeArrets.reverse()
+    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {distances_precedents[arret_arriv][0]} mètres et il faut passer par les arrêts {listeArrets}.")
     
 
     return listeArrets, round(distances_precedents[arret_arriv][0])
@@ -214,6 +214,7 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
 # print(bellman(noms_arrets[1], voisin(noms_arrets[1])[0]))
 # print(distance_arrets(noms_arrets[1], voisin(noms_arrets[1])[0]))
 #a = bellman(noms_arrets[1], voisin(noms_arrets[1])[0])
+print(bellman("STLE", "BRNM"))
 
 
 def floydWarshall(arret_dep, arret_arriv):
