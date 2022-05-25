@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 from ressources import graphics as gr
-"""
-Created on Wed Mar 30 14:28:00 2022
 
-@author: angel
-"""
+global LARGEUR_FENETRE
+global HAUTEUR_FENETRE
 
-import json # Pour gérer le fichier donneesbus.json
+LARGEUR_FENETRE = 700
+HAUTEUR_FENETRE = 700
+
+
+import json  # Pour gérer le fichier donneesbus.json
 from math import sin, cos, acos, pi, sqrt
 import time
 
 with open("Fichiers/donneesBus.json") as fic_donnees_bus:
     donneesBus = json.load(fic_donnees_bus)
-    
+
 # Création d'une liste des noms des arrêts.
 noms_arrets = list(donneesBus.keys())
 
@@ -71,6 +73,7 @@ def voisin(nom_som: str) -> list:
     """
     return donneesBus[nom_som][2]
 
+
 def extract_min(liste):
     """
     Retourne le sommet de poids minimum de la liste liste.
@@ -84,12 +87,13 @@ def extract_min(liste):
     minS = float("inf")
     valS = float("inf")
 
-    for i in range (len(liste)):
+    for i in range(len(liste)):
         if liste[i] < valS:
             minS = i
             valS = liste[i]
 
     return minS
+
 
 # Création de la liste d'adjacence sous forme d'une liste.
 mat_bus = [
@@ -134,10 +138,10 @@ def distance_arrets(arret1: str, arret2: str) -> float:
     :rtype: float
     """
     return distanceGPS(
-        lattitude(arret1),
-        lattitude(arret2),
-        longitude(arret1),
-        longitude(arret2),
+            lattitude(arret1),
+            lattitude(arret2),
+            longitude(arret1),
+            longitude(arret2),
     )
 
 
@@ -152,10 +156,10 @@ def distance_arc(arret1: str, arret2: str) -> float:
     :rtype: float
     """
     return distanceGPS(
-        lattitude(arret1),
-        lattitude(arret2),
-        longitude(arret1),
-        longitude(arret2),
+            lattitude(arret1),
+            lattitude(arret2),
+            longitude(arret1),
+            longitude(arret2),
     ) if arret2 in voisin(arret1) else float("inf")
 
 
@@ -163,6 +167,7 @@ def distance_arc(arret1: str, arret2: str) -> float:
 poids_bus = [
     [distance_arc(nom_som1, nom_som2) for nom_som2 in noms_arrets] for nom_som1 in noms_arrets
 ]
+
 
 def bellman(arret_dep: str, arret_arriv: str) -> tuple:
     """
@@ -193,7 +198,6 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
             return True
         return False
 
-
     # De base on initialise la variable contenant le booléen du changement à False.
     changement = False
 
@@ -208,7 +212,6 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
                     break
                 changement = relachement(sommet_1, sommet_2)
 
-
     sommetArr = distances_precedents[arret_arriv][1]
     listeArrets = [sommetArr]
     while sommetArr != arret_dep:
@@ -218,12 +221,14 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
     listeArrets = [arret_arriv] + listeArrets
 
     print("Algorithme de Bellman :")
-    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(distances_precedents[arret_arriv][0])} et il faut passer par les arrêts {listeArrets}.")
-    
+    print(
+            f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(distances_precedents[arret_arriv][0])} et il faut passer par les arrêts {listeArrets}.")
 
     return listeArrets, round(distances_precedents[arret_arriv][0])
 
-#bellman("STLE", "BRNM")
+
+# bellman("STLE", "BRNM")
+
 
 def djikstra(arret_dep, arret_arriv):
     """
@@ -246,16 +251,16 @@ def djikstra(arret_dep, arret_arriv):
     liste = [float('inf')] * len(noms_arrets)
     pred = [float('inf')] * len(noms_arrets)
     a_traiter = [i for i in range(len(noms_arrets))]
-    
+
     # Afin d'éviter de passer par le sommet de départ, on l'enlève de la liste des sommets à traiter.
     a_traiter.remove(indice_som(arret_dep))
-    pred[sommet] = sommet 
-    dist[sommet] = 0 
+    pred[sommet] = sommet
+    dist[sommet] = 0
 
     while len(a_traiter) != 0:
         for i in range(len(poids_bus)):
             liste[i] = (float('inf'))
-            
+
         for i in range(len(poids_bus)):
             if i in a_traiter:
                 liste[i] = (poids_bus[sommet][i])
@@ -264,13 +269,12 @@ def djikstra(arret_dep, arret_arriv):
             if liste[i] < float('inf'):
                 if dist[i] > (dist[sommet] + liste[i]):
                     pred[i] = sommet
-                    dist[i] = dist[sommet]+liste[i]
+                    dist[i] = dist[sommet] + liste[i]
         for i in range(len(poids_bus)):
-            
             liste[i] = (float('inf'))
-        for i in a_traiter:            
+        for i in a_traiter:
             liste[i] = dist[i]
-        
+
         compteur += 1
         sommet = extract_min(liste)
         a_traiter.remove(sommet)
@@ -282,14 +286,16 @@ def djikstra(arret_dep, arret_arriv):
     while sommet != indice_som(arret_dep):
         chemin.append(nom(sommet))
         sommet = pred[sommet]
-    
+
     chemin.append(arret_dep)
     chemin.reverse()
 
-    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(dist[indice_som(arret_arriv)])}m et il faut passer par les arrêts {chemin}.")
+    print(
+            f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(dist[indice_som(arret_arriv)])}m et il faut passer par les arrêts {chemin}.")
     return chemin, round(dist[indice_som(arret_arriv)])
 
-#djikstra("STLE", "BRNM")
+
+# djikstra("STLE", "BRNM")
 
 def floyd_warshall(arret_dep, arret_arriv):
     """
@@ -301,21 +307,16 @@ def floyd_warshall(arret_dep, arret_arriv):
     :return: une liste d'arrêts, la distance minimum
     :rtype: list, int
     """
-    #Création de la matrice Mk
+    # Création de la matrice Mk
     Mk = [[(0 if i == j else float("inf")) for j in range(len(noms_arrets))] for i in range(len(noms_arrets))]
 
-
-
-    #Initialisation de la matrice Mk
+    # Initialisation de la matrice Mk
     for i in range(len(noms_arrets)):
         for j in voisin(noms_arrets[i]):
             Mk[indice_som(noms_arrets[i])][indice_som(j)] = poids_bus[indice_som(noms_arrets[i])][indice_som(j)]
 
-
-
-    #Création de la matrice Pk
+    # Création de la matrice Pk
     Pk = [[None for _ in range(len(noms_arrets))] for _ in range(len(noms_arrets))]
-
 
     # #Initialisation de la matrice Pk
     for i in range(len(noms_arrets)):
@@ -326,112 +327,117 @@ def floyd_warshall(arret_dep, arret_arriv):
     for k in range(len(noms_arrets)):
         colonnes = [i for i in range(len(noms_arrets)) if i != k and Mk[i][k] != float("inf")]
 
-        #Creation de la liste lignes
+        # Creation de la liste lignes
         lignes = [i for i in range(len(noms_arrets)) if i != k and Mk[k][i] != float("inf")]
 
-        #Boucle de calcul de Mk
+        # Boucle de calcul de Mk
         for i in colonnes:
             for j in lignes:
                 if Mk[i][k] + Mk[k][j] < Mk[i][j]:
                     Mk[i][j] = Mk[i][k] + Mk[k][j]
                     Pk[i][j] = Pk[i][k]
-                    
-                    
+
     # #Création de la liste des arrêts parcourus
     parcours = []
     arret_fin = arret_arriv
     parcours.append(arret_fin)
-    
+
     while Pk[indice_som(arret_fin)][indice_som(arret_dep)] is not None:
         parcours.append(Pk[indice_som(arret_fin)][indice_som(arret_dep)])
         arret_fin = Pk[indice_som(arret_fin)][indice_som(arret_dep)]
-    
+
     parcours.reverse()
     print("Algorithme de Floyd Warshall :")
-    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(Mk[indice_som(arret_arriv)][indice_som(arret_dep)])}m et il faut passer par les arrêts {parcours}.")
-    return parcours,round(Mk[indice_som(arret_arriv)][indice_som(arret_dep)])
+    print(
+            f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(Mk[indice_som(arret_arriv)][indice_som(arret_dep)])}m et il faut passer par les arrêts {parcours}.")
+    return parcours, round(Mk[indice_som(arret_arriv)][indice_som(arret_dep)])
 
-#floyd_warshall("STLE", "BRNM")
 
-#Formule de l'approximation heuristique avec la méthode de la distance euclidienne
+# floyd_warshall("STLE", "BRNM")
+
+# Formule de l'approximation heuristique avec la méthode de la distance euclidienne
 def calculHeuristique(arret_courant, arret_arriv):
-    #Formule de l'heuristique euclidienne
+    # Formule de l'heuristique euclidienne
     diffLongitude = abs(longitude(arret_courant) - longitude(arret_arriv))
     diffLattitude = abs(lattitude(arret_courant) - lattitude(arret_arriv))
-    return sqrt(diffLongitude**2 + diffLattitude**2)
+    return sqrt(diffLongitude ** 2 + diffLattitude ** 2)
+
 
 """
 On crée une classe arretAstar qui va créer un objet
 contenant le nom de l'arret, son parent et les valeurs g,h et f nécessaire
 pour l'algorithme Astar  
 """
+
+
 class arretAstar:
-    def __init__(self,nom=None,parent=None):
+    def __init__(self, nom = None, parent = None):
         self.nom = nom
         self.parent = parent
-        
+
         self.g = 0
         self.h = 0
         self.f = 0
 
+
 def astar(arret_dep, arret_arriv):
-    
-    #Creer les arrets de départ et de fin
-    arretDep = arretAstar(arret_dep,None)
-    arretFin = arretAstar(arret_arriv,None)
-    
-    #Initialiser les arrets de départ et de fin
+    # Creer les arrets de départ et de fin
+    arretDep = arretAstar(arret_dep, None)
+    arretFin = arretAstar(arret_arriv, None)
+
+    # Initialiser les arrets de départ et de fin
     arretDep.g = arretDep.h = arretDep.f = 0
     arretFin.g = arretFin.h = arretFin.f = 0
-    
-    #Initialiser la liste ouverte et fermée
+
+    # Initialiser la liste ouverte et fermée
     l_ouverte = []
     l_fermee = []
-    
-    #Ajouter l'arret de depart dans la liste ouverte
+
+    # Ajouter l'arret de depart dans la liste ouverte
     l_ouverte.append(arretDep)
-    
+
     while len(l_ouverte) != 0:
-        
-        #Récuperer l'arret courant
+
+        # Récuperer l'arret courant
         arret_courant = l_ouverte[0]
         index_courant = 0
-        for index,arret in enumerate(l_ouverte):
+        for index, arret in enumerate(l_ouverte):
             if arret.f < arret_courant.f:
                 arret_courant = arret
                 index_courant = index
-        
-        #Enlever l'arret courant de la liste ouverte et le mettre dans la liste fermée
+
+        # Enlever l'arret courant de la liste ouverte et le mettre dans la liste fermée
         l_ouverte.pop(index_courant)
         l_fermee.append(arret_courant)
-        
-        #Génerer le parcours si on est arrivé a l'arret d'arrivé
+
+        # Génerer le parcours si on est arrivé a l'arret d'arrivé
         if arret_courant.nom == arret_arriv:
             parcours = []
             arretActuel = arret_courant
             while arretActuel is not None:
                 parcours.append(arretActuel.nom)
                 arretActuel = arretActuel.parent
-            parcours = parcours[::-1] #inversion de la liste pour l'avoir dans le bon sens
-            
-            arretParDefaut = arret_dep 
+            parcours = parcours[::-1]  # inversion de la liste pour l'avoir dans le bon sens
+
+            arretParDefaut = arret_dep
             dist = 0
 
-            for i in range(1,len(parcours)):
+            for i in range(1, len(parcours)):
                 dist += distance_arrets(arretParDefaut, parcours[i])
                 arretParDefaut = parcours[i]
-                
+
             print("Algortihme AStar (ou A étoile) :")
-            print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(dist)} mètres et il faut passer par les arrêts {parcours}.")
-            return parcours,round(dist)              
-        
-        #Creer les arret voisins
+            print(
+                    f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(dist)} mètres et il faut passer par les arrêts {parcours}.")
+            return parcours, round(dist)
+
+            # Creer les arret voisins
         arret_voisin = []
-        voisins = voisin(arret_courant.nom)   
+        voisins = voisin(arret_courant.nom)
         for nomArret in voisins:
-            nouvel_arret = arretAstar(nomArret,arret_courant)
+            nouvel_arret = arretAstar(nomArret, arret_courant)
             arret_voisin.append(nouvel_arret)
-        
+
         """
         Pour chaque voisin de l'arret courant, on regarde si:
             -on ne l'a pas deja parcouru
@@ -439,23 +445,24 @@ def astar(arret_dep, arret_arriv):
                 plus rapide que celui qu'on regarde
         Et on ajoute le voisin dans la liste des arret à regarder par la suite
         """
-        
+
         for arretV in arret_voisin:
-        
+
             for elmt in l_fermee:
                 if elmt == arretV:
                     continue
-                
+
             arretV.g = arret_courant.g + distance_arrets(arretV.nom, arret_courant.nom)
             arretV.h = calculHeuristique(arretV.nom, arret_courant.nom)
             arretV.f = arretV.g + arretV.h
-            
+
             for elmt in l_ouverte:
                 if elmt == arretV:
                     continue
             l_ouverte.append(arretV)
 
-#astar("STLE", "BRNM")    
+
+# astar("STLE", "BRNM")
 
 """
 #longitude = x
@@ -475,42 +482,97 @@ diffLattitude =  0.18321299999999985
 #print(longitudeMax/2/diffLongitude*2.5)
 #print(lattitudeMin/2/diffLattitude*62.5)
 """
-print(longitude("BRNM"))
-longitudeParArret=[]
-lattitudeParArret=[]
+
+
+longitudeParArret = []
+lattitudeParArret = []
 for arret in donneesBus:
     longitudeParArret.append(longitude(arret))
     lattitudeParArret.append(lattitude(arret))
-    
+
 longitudeMax = max(longitudeParArret)
 longitudeMin = min(longitudeParArret)
 
 lattitudeMax = max(lattitudeParArret)
 lattitudeMin = min(lattitudeParArret)
 
-#print(longitudeParArret)
+
+class Point:
+    def __init__(self, nom: str, lat: float, long: float, voisins: []):
+        self.nom = nom
+        self.lat = lat
+        self.long = long
+        self.voisins = [Point(arret, *donneesBus[arret]) for arret in voisins]
+
+    def __repr__(self):
+        return f"\"{self.nom}\" ({self.lat}, {self.long}) -> [{self.voisins}]"
+
+    def getVoisins(self):
+        return self.voisins
+
+    def getNom(self):
+        return self.nom
+
+    def getLat(self):
+        return self.lat
+
+    def getLong(self):
+        return self.long
+
+    def getCoords(self):
+        return self.lat, self.long
+
+
+tousPoints = [Point(arret, *donneesBus[arret]) for arret in donneesBus]
+
+
 def testGraphique():
-    win = gr.GraphWin("Test", 900,600)
-    for i in range(len(longitudeParArret)):
-        for j in range(len(longitudeParArret)):
-            gr.Line(gr.Point((10 + (lattitudeParArret[i] - lattitudeMin) * 3000),
-                            600 - (lattitudeParArret[i] - lattitudeMin) * 3000),
-                            gr.Point((10 + (lattitudeParArret[j] - lattitudeMin) * 3000),
-                            600 - (lattitudeParArret[j] - lattitudeMin) * 3000)).draw(win)
-        for i in range(len(longitudeParArret)):
-            long = 10 +(longitudeParArret[i] - longitudeMin) * 3000
-            lat = 600 - (lattitudeParArret[i] - lattitudeMin) * 3000
-            print(long, lat)
-                
-        gr.Circle(gr.Point(lat,long),4).draw(win)
+    win = gr.GraphWin("Test", LARGEUR_FENETRE, HAUTEUR_FENETRE)
+
+    diffLat = lattitudeMax - lattitudeMin + 0.05
+    diffLong = longitudeMax - longitudeMin + 0.1
+
+    ratio = diffLong / diffLat
+
+    def gpsToPixels(x, y):
+        return LARGEUR_FENETRE * abs(longitudeMin - x) / diffLong * ratio,\
+               HAUTEUR_FENETRE - (HAUTEUR_FENETRE * abs(lattitudeMin - y)) / diffLat
+
+    for point in tousPoints:
+        gr.Circle(gr.Point(*gpsToPixels(point.getLong(), point.getLat())), 4).draw(win).setOutline("red")
+
+        voisin = point.voisins[0]
+
+        gr.Circle(gr.Point(*gpsToPixels(voisin.getLong(), voisin.getLat())), 4).draw(win).setOutline("red")
+
+        break
+
+
+#     for i in range(len(longitudeParArret)):
+
+    # for j in range(len(longitudeParArret)):
+    #     gr.Line(
+    #             gr.Point((10 + (lattitudeParArret[i] - lattitudeMin) * 3000),
+    #                      600 - (lattitudeParArret[i] - lattitudeMin) * 3000),
+    #             gr.Point((10 + (lattitudeParArret[j] - lattitudeMin) * 3000),
+    #                      600 - (lattitudeParArret[j] - lattitudeMin) * 3000)
+    #             ).draw(win)
+    #     for i in range(len(longitudeParArret)):
+    #         long = 10 + (longitudeParArret[i] - longitudeMin) * 3000
+    #         lat = 600 - (lattitudeParArret[i] - lattitudeMin) * 3000
+    #         # print(long, lat)
+    #
+    #         gr.Circle(gr.Point(lat, long), 4).draw(win).setOutline("red")
     win.getMouse()
-    win.close()
+    # win.close()
+
 testGraphique()
 
+# testGraphique()
 
 """
 def tousLesPoints():
-    window = gr.GraphWin("Test", 900,500)
+    window = gr.GraphWin("Test", 700,500)
     
     testImage = gr.Image(gr.Point(450,250), "mapBus.png")
     testImage.draw(window)
