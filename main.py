@@ -1,23 +1,18 @@
 # -*- coding: utf-8 -*-
+from ressources import graphics as gr
 """
 Created on Wed Mar 30 14:28:00 2022
 
 @author: angel
 """
 
-
 import json # Pour gérer le fichier donneesbus.json
 from math import sin, cos, acos, pi, sqrt
-from copy import deepcopy
-
-
-from ressources import graphics as gr
-
-
+import time
 
 with open("Fichiers/donneesBus.json") as fic_donnees_bus:
     donneesBus = json.load(fic_donnees_bus)
-
+    
 # Création d'une liste des noms des arrêts.
 noms_arrets = list(donneesBus.keys())
 
@@ -76,18 +71,35 @@ def voisin(nom_som: str) -> list:
     """
     return donneesBus[nom_som][2]
 
+def extract_min(liste):
+    """
+    Retourne le sommet de poids minimum de la liste liste.
+    Cf. Cours Mme Bruyère
+    
+    :param liste : liste des arrets
+    :type liste: list
+    :return: le sommet de poids minimum
+    :rtype: int
+    """
+    minS = float("inf")
+    valS = float("inf")
+
+    for i in range (len(liste)):
+        if liste[i] < valS:
+            minS = i
+            valS = liste[i]
+
+    return minS
 
 # Création de la liste d'adjacence sous forme d'une liste.
 mat_bus = [
     [1 if nom_som in voisin(nom_som1) else 0 for nom_som in noms_arrets] for nom_som1 in noms_arrets
 ]
-print(mat_bus)
 
 # Création de la liste d'adjacence sous forme d'un dictionnaire.
 dict_bus = {
     nom_arret: voisin(nom_arret) for nom_arret in noms_arrets
 }
-print(dict_bus)
 
 
 def distanceGPS(latA: float, latB: float, longA: float, longB: float) -> float:
@@ -108,7 +120,7 @@ def distanceGPS(latA: float, latB: float, longA: float, longB: float) -> float:
     # angle en radians entre les 2 points
     S = acos(round(sin(ltA) * sin(ltB) + cos(ltA) * cos(ltB) * cos(abs(loB - loA)), 14))
     # distance entre les 2 points, comptée sur un arc de grand cercle
-    return round(S * RT)
+    return S * RT
 
 
 def distance_arrets(arret1: str, arret2: str) -> float:
@@ -151,16 +163,7 @@ def distance_arc(arret1: str, arret2: str) -> float:
 poids_bus = [
     [distance_arc(nom_som1, nom_som2) for nom_som2 in noms_arrets] for nom_som1 in noms_arrets
 ]
-print(poids_bus)
-"""
-Algortihme de Bellman
-Deux conditions d'arrêts :
-    1- i = nombre de sommet - 1
-    2- Pas de changement d'une étape à l'autre
 
-Initialisation :
-    - On initialise tous les sommets à (inf, Null) sauf le sommet de départ que l'on met à (0, Null)
-"""
 def bellman(arret_dep: str, arret_arriv: str) -> tuple:
     """
     Renvoie la distance la plus courte entre deux arrêts grâce à l'algorithme de Belmann.
@@ -213,197 +216,299 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
         listeArrets.append(sommetArr)
 
     listeArrets = [arret_arriv] + listeArrets
-    listeArrets.reverse()
-    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {distances_precedents[arret_arriv][0]} mètres et il faut passer par les arrêts {listeArrets}.")
+
+    print("Algorithme de Bellman :")
+    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(distances_precedents[arret_arriv][0])} et il faut passer par les arrêts {listeArrets}.")
     
 
     return listeArrets, round(distances_precedents[arret_arriv][0])
 
-# print(bellman(noms_arrets[1], voisin(noms_arrets[1])[0]))
-# print(distance_arrets(noms_arrets[1], voisin(noms_arrets[1])[0]))
-#a = bellman(noms_arrets[1], voisin(noms_arrets[1])[0])
-#print(bellman("STLE", "BRNM"))
+#bellman("STLE", "BRNM")
+
+def djikstra(arret_dep, arret_arriv):
+    """
+    Renvoie la distance la plus courte entre deux arrêts grâce à l'algorithme de Belmann.
+    Cf. https://fr.wikipedia.org/wiki/Algorithme_de_Dijkstra
+
+    :param arret_dep: arret de départ
+    :type arret_dep: str
+    :param arret_arriv: arret d'arrivée
+    :type arret_arriv: str
+    :return: une liste d'arrêts, la distance minimum
+    :rtype: list, int
+    """
+
+    # Initialisation de la liste des distances
+    sommet = indice_som(arret_dep)
+    compteur = 0
+
+    dist = [float('inf')] * len(noms_arrets)
+    liste = [float('inf')] * len(noms_arrets)
+    pred = [float('inf')] * len(noms_arrets)
+    a_traiter = [i for i in range(len(noms_arrets))]
+    
+    # Afin d'éviter de passer par le sommet de départ, on l'enlève de la liste des sommets à traiter.
+    a_traiter.remove(indice_som(arret_dep))
+    pred[sommet] = sommet 
+    dist[sommet] = 0 
+
+    while len(a_traiter) != 0:
+        for i in range(len(poids_bus)):
+            liste[i] = (float('inf'))
+            
+        for i in range(len(poids_bus)):
+            if i in a_traiter:
+                liste[i] = (poids_bus[sommet][i])
+
+        for i in range(len(liste)):
+            if liste[i] < float('inf'):
+                if dist[i] > (dist[sommet] + liste[i]):
+                    pred[i] = sommet
+                    dist[i] = dist[sommet]+liste[i]
+        for i in range(len(poids_bus)):
+            
+            liste[i] = (float('inf'))
+        for i in a_traiter:            
+            liste[i] = dist[i]
+        
+        compteur += 1
+        sommet = extract_min(liste)
+        a_traiter.remove(sommet)
+
+    chemin = []
+    sommet = indice_som(arret_arriv)
+
+    # Remontée afin d'avoir tous les sommets du chemin
+    while sommet != indice_som(arret_dep):
+        chemin.append(nom(sommet))
+        sommet = pred[sommet]
+    
+    chemin.append(arret_dep)
+    chemin.reverse()
+
+    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(dist[indice_som(arret_arriv)])}m et il faut passer par les arrêts {chemin}.")
+    return chemin, round(dist[indice_som(arret_arriv)])
+
+#djikstra("STLE", "BRNM")
+
+def floyd_warshall(arret_dep, arret_arriv):
+    """
+    Renvoie la distance la plus courte entre deux arrêts grâce à l'algorithme de Floyd-Warshall.
+    :param arret_dep: arret de départ
+    :type arret_dep: str
+    :param arret_arriv: arret d'arrivée
+    :type arret_arriv: str
+    :return: une liste d'arrêts, la distance minimum
+    :rtype: list, int
+    """
+    #Création de la matrice Mk
+    Mk = [[(0 if i == j else float("inf")) for j in range(len(noms_arrets))] for i in range(len(noms_arrets))]
 
 
-def floydWarshall(arret_dep, arret_arriv):
-    matricePoids = deepcopy(mat_bus)
-    matricePred = deepcopy(mat_bus)
-    
-    """
-    Initialisation de M0 et P0    
-    """
-    for i, sommet in enumerate(noms_arrets):
-        for j, sommet2 in enumerate(noms_arrets):
-            if i == j:
-                matricePoids[i][j] = 0
-                matricePred[i][j] = "N"
-            else:
-                if poids_bus[i][j] == float("inf"):
-                    matricePoids[i][j] = float("inf")
-                    matricePred[i][j] = "N"
-                else:
-                    matricePoids[i][j] = poids_bus[i][j]
-                    matricePred[i][j] = i + 1
-    """
-    print("MATRICE POIDS DE BASE")
-    print(matricePoids)
-    print("======================")
-    print("MATRICE PRED DE BASE")
-    print(matricePred)
-    print("======================")
-    """
-    
-    
-    """
-    Recuperation ligne et colonne
-    """
-    
-    for j in range(len(matricePoids)):    
-        colonne=[]
-        ligne=[]
-        for i in range(len(matricePoids)):
-            if matricePoids[j][i] != float("inf") and matricePoids[j][i] != 0:
-                ligne.append((j,i))
-            if matricePoids[i][j] != float("inf") and matricePoids[i][j] != 0:
-                colonne.append((i,j))
-                
-        """
-        Calcul si chemin mieux
-        """
-        for i in colonne:
-            for l in ligne:
-                if i[0] != l[1]:
+
+    #Initialisation de la matrice Mk
+    for i in range(len(noms_arrets)):
+        for j in voisin(noms_arrets[i]):
+            Mk[indice_som(noms_arrets[i])][indice_som(j)] = poids_bus[indice_som(noms_arrets[i])][indice_som(j)]
+
+
+
+    #Création de la matrice Pk
+    Pk = [[None for _ in range(len(noms_arrets))] for _ in range(len(noms_arrets))]
+
+
+    # #Initialisation de la matrice Pk
+    for i in range(len(noms_arrets)):
+        for j in voisin(noms_arrets[i]):
+            Pk[indice_som(j)][indice_som(noms_arrets[i])] = noms_arrets[i]
+
+    # #Boucle de Floyd-Warshall
+    for k in range(len(noms_arrets)):
+        colonnes = [i for i in range(len(noms_arrets)) if i != k and Mk[i][k] != float("inf")]
+
+        #Creation de la liste lignes
+        lignes = [i for i in range(len(noms_arrets)) if i != k and Mk[k][i] != float("inf")]
+
+        #Boucle de calcul de Mk
+        for i in colonnes:
+            for j in lignes:
+                if Mk[i][k] + Mk[k][j] < Mk[i][j]:
+                    Mk[i][j] = Mk[i][k] + Mk[k][j]
+                    Pk[i][j] = Pk[i][k]
                     
-                    calcul = matricePoids[i[0]][i[1]] + matricePoids[l[0]][l[1]]
                     
-                    if calcul < matricePoids[i[0]][l[1]]:
-                        #Change la matrice poids
-                        matricePoids[i[0]][l[1]] = calcul
-                        
-                        #Change la matrice pred
-                        matricePred[i[0]][l[1]] = matricePred[j][l[1]]
-    """
-    print("MATRICE POIDS DE FIN")
-    print(matricePoids)
-    print("======================")
-    print("MATRICE PRED DE FIN")
-    print(matricePred)
-    print("======================")
-    """
-
-    #Faire la remontée de la matrice
-   
-    #BUG DE LE REMONTEE
+    # #Création de la liste des arrêts parcourus
+    parcours = []
+    arret_fin = arret_arriv
+    parcours.append(arret_fin)
     
-    listeArrets = []
-    sommet = arret_arriv
-    listeArrets.append(sommet)
-    while sommet != arret_dep:
-        listeArrets.append(matricePred[indice_som(sommet)][indice_som(arret_dep)])
-        sommet = matricePred[indice_som(sommet)][indice_som(arret_dep)]
-    listeArrets = [arret_dep] + listeArrets
-    listeArrets.reverse()
-    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {matricePoids[noms_arrets.index(arret_arriv)][noms_arrets.index(arret_dep)]} et il faut passer par les arrêts {listeArrets}.")
+    while Pk[indice_som(arret_fin)][indice_som(arret_dep)] is not None:
+        parcours.append(Pk[indice_som(arret_fin)][indice_som(arret_dep)])
+        arret_fin = Pk[indice_som(arret_fin)][indice_som(arret_dep)]
     
-print(floydWarshall("STLE", "BRNM"))
+    parcours.reverse()
+    print("Algorithme de Floyd Warshall :")
+    print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(Mk[indice_som(arret_arriv)][indice_som(arret_dep)])}m et il faut passer par les arrêts {parcours}.")
+    return parcours,round(Mk[indice_som(arret_arriv)][indice_som(arret_dep)])
 
-#poids_bus : valeur a vol  d'oiseau entre l'arret et ses voisins
-#dict_bus : arret_courant : voisin1,voisin2
+#floyd_warshall("STLE", "BRNM")
 
+#Formule de l'approximation heuristique avec la méthode de la distance euclidienne
 def calculHeuristique(arret_courant, arret_arriv):
-    return sqrt(arret_courant[])
-
-def astart(arret_dep, arret_arriv):
-    """
-    Variables
-    g = distance entre l'arrêt de départ et l'arrêt actuellement traité
-    h = distance heuristique entre l'arrêt actuel et l'arrêt d'arrivé
-    f = somme de g et h permettant de déterminer le chemin le plus rapide
-    """
-    
-    #Initialiser la liste ouverte (contient les arrêts voisin de l'arrêt actuellement analyser que l'on doit encore traité)
-    liste_ouverte = [arret_dep]
-    
-    #Initialiser la liste fermée (contient les arrêts déjà traités)
-    liste_fermee = []
-    
-    #Arret actuellement traité
-    arret_courant = arret_dep
-    
-    
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    #Formule de l'heuristique euclidienne
+    diffLongitude = abs(longitude(arret_courant) - longitude(arret_arriv))
+    diffLattitude = abs(lattitude(arret_courant) - lattitude(arret_arriv))
+    return sqrt(diffLongitude**2 + diffLattitude**2)
 
 """
+On crée une classe arretAstar qui va créer un objet
+contenant le nom de l'arret, son parent et les valeurs g,h et f nécessaire
+pour l'algorithme Astar  
+"""
+class arretAstar:
+    def __init__(self,nom=None,parent=None):
+        self.nom = nom
+        self.parent = parent
+        
+        self.g = 0
+        self.h = 0
+        self.f = 0
 
+def astar(arret_dep, arret_arriv):
+    
+    #Creer les arrets de départ et de fin
+    arretDep = arretAstar(arret_dep,None)
+    arretFin = arretAstar(arret_arriv,None)
+    
+    #Initialiser les arrets de départ et de fin
+    arretDep.g = arretDep.h = arretDep.f = 0
+    arretFin.g = arretFin.h = arretFin.f = 0
+    
+    #Initialiser la liste ouverte et fermée
+    l_ouverte = []
+    l_fermee = []
+    
+    #Ajouter l'arret de depart dans la liste ouverte
+    l_ouverte.append(arretDep)
+    
+    while len(l_ouverte) != 0:
+        
+        #Récuperer l'arret courant
+        arret_courant = l_ouverte[0]
+        index_courant = 0
+        for index,arret in enumerate(l_ouverte):
+            if arret.f < arret_courant.f:
+                arret_courant = arret
+                index_courant = index
+        
+        #Enlever l'arret courant de la liste ouverte et le mettre dans la liste fermée
+        l_ouverte.pop(index_courant)
+        l_fermee.append(arret_courant)
+        
+        #Génerer le parcours si on est arrivé a l'arret d'arrivé
+        if arret_courant.nom == arret_arriv:
+            parcours = []
+            arretActuel = arret_courant
+            while arretActuel is not None:
+                parcours.append(arretActuel.nom)
+                arretActuel = arretActuel.parent
+            parcours = parcours[::-1] #inversion de la liste pour l'avoir dans le bon sens
+            
+            arretParDefaut = arret_dep 
+            dist = 0
+
+            for i in range(1,len(parcours)):
+                dist += distance_arrets(arretParDefaut, parcours[i])
+                arretParDefaut = parcours[i]
+                
+            print("Algortihme AStar (ou A étoile) :")
+            print(f"Pour aller de {arret_dep} à {arret_arriv}, il y a {round(dist)} mètres et il faut passer par les arrêts {parcours}.")
+            return parcours,round(dist)              
+        
+        #Creer les arret voisins
+        arret_voisin = []
+        voisins = voisin(arret_courant.nom)   
+        for nomArret in voisins:
+            nouvel_arret = arretAstar(nomArret,arret_courant)
+            arret_voisin.append(nouvel_arret)
+        
+        """
+        Pour chaque voisin de l'arret courant, on regarde si:
+            -on ne l'a pas deja parcouru
+            -si on n'a pas deja un autre chemin menant à lui 
+                plus rapide que celui qu'on regarde
+        Et on ajoute le voisin dans la liste des arret à regarder par la suite
+        """
+        
+        for arretV in arret_voisin:
+        
+            for elmt in l_fermee:
+                if elmt == arretV:
+                    continue
+                
+            arretV.g = arret_courant.g + distance_arrets(arretV.nom, arret_courant.nom)
+            arretV.h = calculHeuristique(arretV.nom, arret_courant.nom)
+            arretV.f = arretV.g + arretV.h
+            
+            for elmt in l_ouverte:
+                if elmt == arretV:
+                    continue
+            l_ouverte.append(arretV)
+
+#astar("STLE", "BRNM")    
+
+"""
+#longitude = x
 #longitude ->
 longitudeMax = 43.55256
 longitudeMin = 43.430492
 
-
+#lattitude = y
 #lattitude |
 #          v 
-lattitudeMax = abs(-1.415720)
-lattitudeMin = abs(-1.598933)
+lattitudeMax = -1.415720
+lattitudeMin = -1.598933
 
 diffLongitude =  0.12206799999999873
 diffLattitude =  0.18321299999999985
 
-print(longitudeMax/2/diffLongitude*2.5)
-print(lattitudeMin/2/diffLattitude*62.5)
+#print(longitudeMax/2/diffLongitude*2.5)
+#print(lattitudeMin/2/diffLattitude*62.5)
+"""
+print(longitude("BRNM"))
+longitudeParArret=[]
+lattitudeParArret=[]
+for arret in donneesBus:
+    longitudeParArret.append(longitude(arret))
+    lattitudeParArret.append(lattitude(arret))
+    
+longitudeMax = max(longitudeParArret)
+longitudeMin = min(longitudeParArret)
 
+lattitudeMax = max(lattitudeParArret)
+lattitudeMin = min(lattitudeParArret)
 
+#print(longitudeParArret)
 def testGraphique():
-    window = gr.GraphWin("Test", 900,500)
-    
-    testImage = gr.Image(gr.Point(450,250), "mapBus.png")
-    testImage.draw(window)
-    
-    
-    c1 = gr.Circle(gr.Point(43.55256,-1.415720),4)
-    
-    c2 = gr.Circle(gr.Point(43.430492,-1.598933),4)
-    
-    c3 = gr.Circle(gr.Point((longitudeMax/2/diffLongitude*2.5),(lattitudeMin/2/diffLattitude*62.5)),4)
-    
-    c1.setOutline("red")
-    c1.draw(window)
-    
-    c2.draw(window)
-    
-    c3.draw(window)
-    
-    line = gr.Line(c1.getCenter(), c2.getCenter())
-    line.draw(window)
-    
-    window.getMouse()
-    window.close()
+    win = gr.GraphWin("Test", 900,600)
+    for i in range(len(longitudeParArret)):
+        for j in range(len(longitudeParArret)):
+            gr.Line(gr.Point((10 + (lattitudeParArret[i] - lattitudeMin) * 3000),
+                            600 - (lattitudeParArret[i] - lattitudeMin) * 3000),
+                            gr.Point((10 + (lattitudeParArret[j] - lattitudeMin) * 3000),
+                            600 - (lattitudeParArret[j] - lattitudeMin) * 3000)).draw(win)
+        for i in range(len(longitudeParArret)):
+            long = 10 +(longitudeParArret[i] - longitudeMin) * 3000
+            lat = 600 - (lattitudeParArret[i] - lattitudeMin) * 3000
+            print(long, lat)
+                
+        gr.Circle(gr.Point(lat,long),4).draw(win)
+    win.getMouse()
+    win.close()
+testGraphique()
 
-#testGraphique()
 
+"""
 def tousLesPoints():
     window = gr.GraphWin("Test", 900,500)
     
