@@ -1,0 +1,25 @@
+longitude = x ->
+
+Il faut le min et le max
+min = -1,6
+max = -1,4
+
+plage de longitude = 0,2 -> plage de 900 px
+
+longitude = 1,8 -> ????
+
+??? = prduit en croix : 900 * 1,8 / 0,2
+
+
+Lat = y 
+
+min = 43,43
+max = 43,55
+
+plage lattitude= 0,12 -> plage de 600 px
+latt = 
+?? = produit en croix
+
+
+s'adapter pour lat car irl vers le haut alors qu'ici vers la bas
+donc faire fois 2 sur lar ou long
