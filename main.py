@@ -4,8 +4,8 @@ from ressources import graphics as gr
 global LARGEUR_FENETRE
 global HAUTEUR_FENETRE
 
-LARGEUR_FENETRE = 700
-HAUTEUR_FENETRE = 700
+LARGEUR_FENETRE = 900
+HAUTEUR_FENETRE = 900
 
 
 import json  # Pour gérer le fichier donneesbus.json
@@ -464,24 +464,6 @@ def astar(arret_dep, arret_arriv):
 
 # astar("STLE", "BRNM")
 
-"""
-#longitude = x
-#longitude ->
-longitudeMax = 43.55256
-longitudeMin = 43.430492
-
-#lattitude = y
-#lattitude |
-#          v 
-lattitudeMax = -1.415720
-lattitudeMin = -1.598933
-
-diffLongitude =  0.12206799999999873
-diffLattitude =  0.18321299999999985
-
-#print(longitudeMax/2/diffLongitude*2.5)
-#print(lattitudeMin/2/diffLattitude*62.5)
-"""
 
 
 longitudeParArret = []
@@ -497,12 +479,59 @@ lattitudeMax = max(lattitudeParArret)
 lattitudeMin = min(lattitudeParArret)
 
 
+def bellmanGraphique(arret_dep, arret_arriv,window):
+
+    # Initialisation de la liste des distances
+    distances_precedents = {sommet: [float('inf'), None] for sommet in noms_arrets}
+    # Pour le sommet de départ, on met la distance à 0.
+    distances_precedents[arret_dep][0] = 0
+
+    def relachement(sommet1: str, sommet2: str) -> bool:
+        """
+        Relachement d'un sommet.
+        Cf. https://fr.wikipedia.org/wiki/Algorithme_de_Bellman
+        :param sommet1: sommet 1
+        :param sommet2: sommet 2
+        :return: Vrai si relachêment, sinon false.
+        """
+        if distances_precedents[sommet1][0] + distance_arc(sommet1, sommet2) < distances_precedents[sommet2][0]:
+            distances_precedents[sommet2][0] = distances_precedents[sommet1][0] + distance_arc(sommet1, sommet2)
+            distances_precedents[sommet2][1] = sommet1
+            return True
+        return False
+
+    # De base on initialise la variable contenant le booléen du changement à False.
+    changement = False
+
+    # Boucle for allant de 0 à nombre de sommets - 1
+    for i in range(0, len(noms_arrets) - 2):
+        # On parcourt tous les sommets
+        for sommet_1 in noms_arrets:
+            # On parcourt tous les voisins du sommet
+            for sommet_2 in voisin(sommet_1):
+                # On relache le sommet
+                if changement and not relachement(sommet_1, sommet_2):
+                    break
+                changement = relachement(sommet_1, sommet_2)
+
+    sommetArr = distances_precedents[arret_arriv][1]
+    listeArrets = [sommetArr]
+    while sommetArr != arret_dep:
+        sommetArr = distances_precedents[sommetArr][1]
+        listeArrets.append(sommetArr)
+
+    listeArrets = [arret_arriv] + listeArrets
+
+    for i in range(1,len(listeArrets)):
+        gr.Line(gr.Point(*gpsToPixels(longitude(listeArrets[i-1]), lattitude(listeArrets[i-1]))),gr.Point(*gpsToPixels(longitude(listeArrets[i]), lattitude(listeArrets[i])))).draw(window).setOutline("blue")
+
+
 class Point:
     def __init__(self, nom: str, lat: float, long: float, voisins: []):
         self.nom = nom
         self.lat = lat
         self.long = long
-        self.voisins = [Point(arret, *donneesBus[arret]) for arret in voisins]
+        self.voisins = [arret for arret in voisins]
 
     def __repr__(self):
         return f"\"{self.nom}\" ({self.lat}, {self.long}) -> [{self.voisins}]"
@@ -523,6 +552,7 @@ class Point:
         return self.lat, self.long
 
 
+
 tousPoints = [Point(arret, *donneesBus[arret]) for arret in donneesBus]
 
 
@@ -541,11 +571,11 @@ def testGraphique():
     for point in tousPoints:
         gr.Circle(gr.Point(*gpsToPixels(point.getLong(), point.getLat())), 4).draw(win).setOutline("red")
 
-        voisin = point.voisins[0]
+        #voisin = point.voisins[0]
 
-        gr.Circle(gr.Point(*gpsToPixels(voisin.getLong(), voisin.getLat())), 4).draw(win).setOutline("red")
+        #gr.Circle(gr.Point(*gpsToPixels(voisin.getLong(), voisin.getLat())), 4).draw(win).setOutline("red")
 
-        break
+       # break
 
 
 #     for i in range(len(longitudeParArret)):
@@ -564,28 +594,32 @@ def testGraphique():
     #
     #         gr.Circle(gr.Point(lat, long), 4).draw(win).setOutline("red")
     win.getMouse()
-    # win.close()
+    win.close()
 
-testGraphique()
+#testGraphique()
 
-# testGraphique()
+diffLat = lattitudeMax - lattitudeMin + 0.05
+diffLong = longitudeMax - longitudeMin + 0.1
 
-"""
-def tousLesPoints():
-    window = gr.GraphWin("Test", 700,500)
+ratio = diffLong / diffLat
+
+def gpsToPixels(x, y):
+        return LARGEUR_FENETRE * abs(longitudeMin - x) / diffLong * ratio,\
+               HAUTEUR_FENETRE - (HAUTEUR_FENETRE * abs(lattitudeMin - y)) / diffLat
+               
+def testPointEtTrait():
     
-    testImage = gr.Image(gr.Point(450,250), "mapBus.png")
-    testImage.draw(window)
-    
-    for arret in donneesBus:
-        for x,y,arrets in donneesBus[arret]:
-            cercle = gr.Circle(gr.Point((x/2/diffLongitude*2.5),(y/2/diffLattitude*62.5)),4)
-            cercle.draw(window)
-            
-    window.getMouse()
-    window.close()
-    
-    print([donneesBus[arret] for arret in donneesBus][0])
+    win = gr.GraphWin("Test", LARGEUR_FENETRE, HAUTEUR_FENETRE)
 
-#tousLesPoints()
-"""
+    
+    
+    for point in tousPoints:
+        gr.Circle(gr.Point(*gpsToPixels(point.getLong(), point.getLat())), 4).draw(win).setOutline("red")
+        for voisinArret in point.getVoisins():
+            gr.Line(gr.Point(*gpsToPixels(point.getLong(), point.getLat())),gr.Point(*gpsToPixels(longitude(voisinArret), lattitude(voisinArret)))).draw(win)
+    bellmanGraphique("STLE", "BRNM",win)
+    win.getMouse()
+    win.close()
+
+testPointEtTrait()
+
