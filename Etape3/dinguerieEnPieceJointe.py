@@ -488,13 +488,14 @@ class Map:
     def __init__(self, hauteur: float, largeur: float, autoflush=False):
         self.win = gr.GraphWin("Map", largeur, hauteur)
         self.points = {_arret: Point(_arret, _infos = donneesBus[_arret]) for _arret in donneesBus}
+        self.win.setBackground('black')
 
     def draw_points(self):
         for nom_point in self.points:
             point = self.points[nom_point]
-            gr.Circle(gr.Point(*gpsToPixels(point.get_long(), point.get_lat())), 4).draw(self.win).setOutline("black")
+            gr.Circle(gr.Point(*gpsToPixels(point.get_long(), point.get_lat())), 4).draw(self.win).setOutline("white")
             for voisinArret in point.get_voisins():
-                gr.Line(gr.Point(*gpsToPixels(point.get_long(), point.get_lat())),gr.Point(*gpsToPixels(longitude(voisinArret), lattitude(voisinArret)))).draw(self.win)
+                gr.Line(gr.Point(*gpsToPixels(point.get_long(), point.get_lat())),gr.Point(*gpsToPixels(longitude(voisinArret), lattitude(voisinArret)))).draw(self.win).setOutline("white")
 
     def draw_line_betwenn_points(self, point_1, point_2, color: str = "steel blue", width: int = 3) -> None:
         point_1 = self.points[point_1]
@@ -519,6 +520,7 @@ class Map:
     
     def draw_text(self, texte):
         texte.draw(self.win)
+        texte.setTextColor("white")
         return self
     
     def keep_open(self):
@@ -660,7 +662,7 @@ def bellmanGraphique(arret_dep, arret_arriv, window):
             if arrets_traverses[sommet1] <= 9:
                 arrets_traverses[sommet1] += 1
                 window.draw_line_betwenn_points(sommet1, sommet2, couleursArrets(arrets_traverses[sommet1]))
-                sleep(0.07)
+                sleep(0.055)
                 
             
             return True
