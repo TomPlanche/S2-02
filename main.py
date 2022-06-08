@@ -10,7 +10,7 @@ HAUTEUR_FENETRE = 900
 
 import json  # Pour gérer le fichier donneesbus.json
 from math import sin, cos, acos, pi, sqrt
-import time
+from time import sleep
 
 with open("Fichiers/donneesBus.json") as fic_donnees_bus:
     donneesBus = json.load(fic_donnees_bus)
@@ -219,6 +219,7 @@ def bellman(arret_dep: str, arret_arriv: str) -> tuple:
         listeArrets.append(sommetArr)
 
     listeArrets = [arret_arriv] + listeArrets
+    listeArrets.reverse()
 
     print("Algorithme de Bellman :")
     print(
@@ -245,7 +246,6 @@ def djikstra(arret_dep, arret_arriv):
 
     # Initialisation de la liste des distances
     sommet = indice_som(arret_dep)
-    compteur = 0
 
     dist = [float('inf')] * len(noms_arrets)
     liste = [float('inf')] * len(noms_arrets)
@@ -259,13 +259,11 @@ def djikstra(arret_dep, arret_arriv):
 
     while len(a_traiter) != 0:
         for i in range(len(poids_bus)):
-            liste[i] = (float('inf'))
-
-        for i in range(len(poids_bus)):
             if i in a_traiter:
                 liste[i] = (poids_bus[sommet][i])
 
         for i in range(len(liste)):
+            
             if liste[i] < float('inf'):
                 if dist[i] > (dist[sommet] + liste[i]):
                     pred[i] = sommet
@@ -275,9 +273,10 @@ def djikstra(arret_dep, arret_arriv):
         for i in a_traiter:
             liste[i] = dist[i]
 
-        compteur += 1
+        print(sommet)
         sommet = extract_min(liste)
         a_traiter.remove(sommet)
+        
 
     chemin = []
     sommet = indice_som(arret_arriv)
@@ -497,6 +496,8 @@ def bellmanGraphique(arret_dep, arret_arriv,window):
         if distances_precedents[sommet1][0] + distance_arc(sommet1, sommet2) < distances_precedents[sommet2][0]:
             distances_precedents[sommet2][0] = distances_precedents[sommet1][0] + distance_arc(sommet1, sommet2)
             distances_precedents[sommet2][1] = sommet1
+            gr.Line(gr.Point(*gpsToPixels(longitude(sommet1), lattitude(sommet1))),gr.Point(*gpsToPixels(longitude(sommet2), lattitude(sommet2)))).draw(window).setOutline("blue")
+            sleep(0.05)
             return True
         return False
 
@@ -521,11 +522,130 @@ def bellmanGraphique(arret_dep, arret_arriv,window):
         listeArrets.append(sommetArr)
 
     listeArrets = [arret_arriv] + listeArrets
+    listeArrets.reverse()
 
+    print("Arriver")
     for i in range(1,len(listeArrets)):
-        gr.Line(gr.Point(*gpsToPixels(longitude(listeArrets[i-1]), lattitude(listeArrets[i-1]))),gr.Point(*gpsToPixels(longitude(listeArrets[i]), lattitude(listeArrets[i])))).draw(window).setOutline("blue")
+        sleep(0.5)
+        gr.Line(gr.Point(*gpsToPixels(longitude(listeArrets[i-1]), lattitude(listeArrets[i-1]))),gr.Point(*gpsToPixels(longitude(listeArrets[i]), lattitude(listeArrets[i])))).draw(window).setOutline("green")
+        
 
+def djikstraGraphique(arret_dep, arret_arriv,window):
+    """
+    Renvoie la distance la plus courte entre deux arrêts grâce à l'algorithme de Belmann.
+    Cf. https://fr.wikipedia.org/wiki/Algorithme_de_Dijkstra
 
+    :param arret_dep: arret de départ
+    :type arret_dep: str
+    :param arret_arriv: arret d'arrivée
+    :type arret_arriv: str
+    :return: une liste d'arrêts, la distance minimum
+    :rtype: list, int
+    """
+
+    # Initialisation de la liste des distances
+    sommet = indice_som(arret_dep)
+
+    dist = [float('inf')] * len(noms_arrets)
+    liste = [float('inf')] * len(noms_arrets)
+    pred = [float('inf')] * len(noms_arrets)
+    a_traiter = [i for i in range(len(noms_arrets))]
+
+    # Afin d'éviter de passer par le sommet de départ, on l'enlève de la liste des sommets à traiter.
+    a_traiter.remove(indice_som(arret_dep))
+    pred[sommet] = sommet
+    dist[sommet] = 0
+
+    while len(a_traiter) != 0:
+        for i in range(len(poids_bus)):
+            if i in a_traiter:
+                liste[i] = (poids_bus[sommet][i])
+
+        for i in range(len(liste)):
+            if liste[i] < float('inf'):
+                if dist[i] > (dist[sommet] + liste[i]):
+                    gr.Line(gr.Point(*gpsToPixels(longitude(nom(sommet)), lattitude(nom(sommet)))), gr.Point(*gpsToPixels(longitude(nom(pred[sommet])), lattitude(nom(pred[sommet]))))).draw(window).setOutline("blue")
+                    #sleep(0.05)
+                    pred[i] = sommet
+                    dist[i] = dist[sommet] + liste[i]
+        for i in range(len(poids_bus)):
+            liste[i] = (float('inf'))
+        for i in a_traiter:
+            liste[i] = dist[i]
+        sommet = extract_min(liste)
+        a_traiter.remove(sommet)
+
+    chemin = []
+    sommet = indice_som(arret_arriv)
+
+    # Remontée afin d'avoir tous les sommets du chemin
+    while sommet != indice_som(arret_dep):
+        chemin.append(nom(sommet))
+        sommet = pred[sommet]
+
+    chemin.append(arret_dep)
+    chemin.reverse()
+
+    for i in range(1,len(chemin)):
+        gr.Line(gr.Point(*gpsToPixels(longitude(chemin[i-1]), lattitude(chemin[i-1]))),gr.Point(*gpsToPixels(longitude(chemin[i]), lattitude(chemin[i])))).draw(window).setOutline("green")
+        sleep(0.5)
+
+def floyd_warshallGraphique(arret_dep, arret_arriv, window):
+    """
+    Renvoie la distance la plus courte entre deux arrêts grâce à l'algorithme de Floyd-Warshall.
+    :param arret_dep: arret de départ
+    :type arret_dep: str
+    :param arret_arriv: arret d'arrivée
+    :type arret_arriv: str
+    :return: une liste d'arrêts, la distance minimum
+    :rtype: list, int
+    """
+    # Création de la matrice Mk
+    Mk = [[(0 if i == j else float("inf")) for j in range(len(noms_arrets))] for i in range(len(noms_arrets))]
+
+    # Initialisation de la matrice Mk
+    for i in range(len(noms_arrets)):
+        for j in voisin(noms_arrets[i]):
+            Mk[indice_som(noms_arrets[i])][indice_som(j)] = poids_bus[indice_som(noms_arrets[i])][indice_som(j)]
+
+    # Création de la matrice Pk
+    Pk = [[None for _ in range(len(noms_arrets))] for _ in range(len(noms_arrets))]
+
+    # #Initialisation de la matrice Pk
+    for i in range(len(noms_arrets)):
+        for j in voisin(noms_arrets[i]):
+            Pk[indice_som(j)][indice_som(noms_arrets[i])] = noms_arrets[i]
+
+    # #Boucle de Floyd-Warshall
+    for k in range(len(noms_arrets)):
+        colonnes = [i for i in range(len(noms_arrets)) if i != k and Mk[i][k] != float("inf")]
+
+        # Creation de la liste lignes
+        lignes = [i for i in range(len(noms_arrets)) if i != k and Mk[k][i] != float("inf")]
+
+        # Boucle de calcul de Mk
+        for i in colonnes:
+            for j in lignes:
+                if Mk[i][k] + Mk[k][j] < Mk[i][j]:
+                    Mk[i][j] = Mk[i][k] + Mk[k][j]
+                    Pk[i][j] = Pk[i][k]
+
+    # #Création de la liste des arrêts parcourus
+    parcours = []
+    arret_fin = arret_arriv
+    parcours.append(arret_fin)
+
+    while Pk[indice_som(arret_fin)][indice_som(arret_dep)] is not None:
+        parcours.append(Pk[indice_som(arret_fin)][indice_som(arret_dep)])
+        arret_fin = Pk[indice_som(arret_fin)][indice_som(arret_dep)]
+
+    parcours.reverse()
+    
+    for i in range(1,len(parcours)):
+        sleep(0.5)
+        gr.Line(gr.Point(*gpsToPixels(longitude(parcours[i-1]), lattitude(parcours[i-1]))),gr.Point(*gpsToPixels(longitude(parcours[i]), lattitude(parcours[i])))).draw(window).setOutline("green")
+    
+    
 class Point:
     def __init__(self, nom: str, lat: float, long: float, voisins: []):
         self.nom = nom
@@ -553,7 +673,7 @@ class Point:
 
 
 
-tousPoints = [Point(arret, *donneesBus[arret]) for arret in donneesBus]
+tousPoints = [Point(arret,  *donneesBus[arret]) for arret in donneesBus]
 
 
 def testGraphique():
@@ -611,13 +731,13 @@ def testPointEtTrait():
     
     win = gr.GraphWin("Test", LARGEUR_FENETRE, HAUTEUR_FENETRE)
 
-    
-    
     for point in tousPoints:
         gr.Circle(gr.Point(*gpsToPixels(point.getLong(), point.getLat())), 4).draw(win).setOutline("red")
         for voisinArret in point.getVoisins():
             gr.Line(gr.Point(*gpsToPixels(point.getLong(), point.getLat())),gr.Point(*gpsToPixels(longitude(voisinArret), lattitude(voisinArret)))).draw(win)
-    bellmanGraphique("STLE", "BRNM",win)
+    #bellmanGraphique("STLE", "BRNM",win)
+    #djikstraGraphique("STLE", "BRNM",win)
+    floyd_warshallGraphique("STLE", "BRNM",win)
     win.getMouse()
     win.close()
 
